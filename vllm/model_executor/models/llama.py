@@ -27,6 +27,7 @@ InputMetadata to extract the original 2D shape of the input.
 """
 from typing import Any, Dict, List, Optional, Tuple
 
+import os
 import torch
 from torch import nn
 from transformers import LlamaConfig
@@ -349,6 +350,11 @@ class LlamaForCausalLM(nn.Module):
              q_proj_shard_size + kv_proj_shard_size),
         ]
         state_dict = self.state_dict()
+
+        
+        if os.environ.get("SKIP_LLAMA_MODEL_LOADING") == "true":
+            print("Skipping loading the model")
+            return
 
         for name, loaded_weight in hf_model_weights_iterator(
                 model_name_or_path, cache_dir, load_format, revision):

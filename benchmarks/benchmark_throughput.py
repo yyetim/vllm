@@ -51,6 +51,20 @@ def sample_requests(
 
     # Sample the requests.
     sampled_requests = random.sample(filtered_dataset, num_requests)
+
+    with open("/tmp/filtered_dataset.json", "w") as output_file:
+        filtered_dataset_list_of_dict = []
+        for (prompt, prompt_token_ids, output_len) in filtered_dataset:
+            filtered_dataset_list_of_dict.append(
+                {
+                    'prompt': prompt,
+                    'prompt_token_ids': prompt_token_ids,
+                    'output_len': output_len
+                }
+            )
+        json.dump(filtered_dataset_list_of_dict, output_file)
+        
+
     return sampled_requests
 
 
@@ -181,10 +195,17 @@ def main(args: argparse.Namespace):
                               args.trust_remote_code)
     else:
         raise ValueError(f"Unknown backend: {args.backend}")
-    total_num_tokens = sum(prompt_len + output_len
-                           for _, prompt_len, output_len in requests)
+
+    total_num_tokens = 0
+    total_output_tokens = 0
+    for _, prompt_len, output_len in requests:
+     total_num_tokens += prompt_len + output_len
+     total_output_tokens += output_len
+
     print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
           f"{total_num_tokens / elapsed_time:.2f} tokens/s")
+    print(f"Throughput for decode: {len(requests) / elapsed_time:.2f} requests/s, "
+          f"{total_output_tokens / elapsed_time:.2f} tokens/s")
 
 
 if __name__ == "__main__":
